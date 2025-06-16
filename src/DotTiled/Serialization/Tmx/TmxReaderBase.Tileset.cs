@@ -208,7 +208,7 @@ public abstract partial class TmxReaderBase
     {
       "properties" => () => Helpers.SetAtMostOnceUsingCounter(ref properties, Helpers.MergeProperties(properties, ReadProperties()).ToList(), "Properties", ref propertiesCounter),
       "image" => () => Helpers.SetAtMostOnce(ref image, ReadImage(), "Image"),
-      "objectgroup" => () => Helpers.SetAtMostOnce(ref objectLayer, ReadObjectLayer(), "ObjectLayer"),
+      "objectgroup" => () => Helpers.SetAtMostOnce(ref objectLayer, ReadObjectLayer(null), "ObjectLayer"),
       "animation" => () => Helpers.SetAtMostOnce(ref animation, r.ReadList<Frame>("animation", "frame", (ar) =>
       {
         var tileID = ar.GetRequiredAttributeParseable<uint>("tileid");

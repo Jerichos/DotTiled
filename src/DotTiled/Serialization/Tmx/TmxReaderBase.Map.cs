@@ -69,9 +69,9 @@ public abstract partial class TmxReaderBase
       "properties" => () => Helpers.SetAtMostOnceUsingCounter(ref properties, Helpers.MergeProperties(properties, ReadProperties()).ToList(), "Properties", ref propertiesCounter),
       "tileset" => () => tilesets.Add(ReadTileset(version, tiledVersion)),
       "layer" => () => layers.Add(ReadTileLayer(infinite)),
-      "objectgroup" => () => layers.Add(ReadObjectLayer()),
+      "objectgroup" => () => layers.Add(ReadObjectLayer(tilesets)),
       "imagelayer" => () => layers.Add(ReadImageLayer()),
-      "group" => () => layers.Add(ReadGroup()),
+      "group" => () => layers.Add(ReadGroup(tilesets)),
       _ => r.Skip
     });
 

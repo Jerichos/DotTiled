@@ -8,7 +8,7 @@ namespace DotTiled.Serialization.Tmx;
 
 public abstract partial class TmxReaderBase
 {
-  internal ObjectLayer ReadObjectLayer()
+  internal ObjectLayer ReadObjectLayer(List<Tileset> tilesets)
   {
     // Attributes
     var id = _reader.GetRequiredAttributeParseable<uint>("id");
@@ -41,7 +41,7 @@ public abstract partial class TmxReaderBase
     _reader.ProcessChildren("objectgroup", (r, elementName) => elementName switch
     {
       "properties" => () => Helpers.SetAtMostOnceUsingCounter(ref properties, Helpers.MergeProperties(properties, ReadProperties()).ToList(), "Properties", ref propertiesCounter),
-      "object" => () => objects.Add(ReadObject()),
+      "object" => () => objects.Add(ReadObject(tilesets)),
       _ => r.Skip
     });
 
@@ -68,13 +68,34 @@ public abstract partial class TmxReaderBase
     };
   }
 
-  internal DotTiled.Object ReadObject()
+  internal DotTiled.Object ReadObject(List<Tileset> tilesets )
   {
     // Attributes
     var template = _reader.GetOptionalAttribute("template");
     DotTiled.Object obj = null;
+
+    Optional<uint> gidDefault = obj is TileObject tileObj ? tileObj.GID : Optional<uint>.Empty;
+    var gid = _reader.GetOptionalAttributeParseable<uint>("gid").GetValueOrOptional(gidDefault);
+
     if (template.HasValue)
       obj = _externalTemplateResolver(template).Object;
+    else if(gid.HasValue && tilesets != null && tilesets.Count > 0)
+    {
+      {
+        foreach (var tileset in tilesets)
+        {
+          if (tileset.FirstGID.HasValue && tileset.FirstGID <= gid)
+          {
+            var localGid = gid - tileset.FirstGID;
+            Tile tile = tileset.Tiles[(int)localGid];
+            obj = new DotTiled.TileObject();
+            obj.Type = tile.Type;
+            obj.Properties = tile.Properties;
+            break;
+          }
+        }
+      }
+    }
 
     uint idDefault = obj?.ID.GetValueOr(0) ?? 0;
     string nameDefault = obj?.Name ?? "";
@@ -84,7 +105,6 @@ public abstract partial class TmxReaderBase
     float widthDefault = obj?.Width ?? 0f;
     float heightDefault = obj?.Height ?? 0f;
     float rotationDefault = obj?.Rotation ?? 0f;
-    Optional<uint> gidDefault = obj is TileObject tileObj ? tileObj.GID : Optional<uint>.Empty;
     bool visibleDefault = obj?.Visible ?? true;
     List<IProperty> propertiesDefault = obj?.Properties ?? null;
 
@@ -96,7 +116,6 @@ public abstract partial class TmxReaderBase
     var width = _reader.GetOptionalAttributeParseable<float>("width").GetValueOr(widthDefault);
     var height = _reader.GetOptionalAttributeParseable<float>("height").GetValueOr(heightDefault);
     var rotation = _reader.GetOptionalAttributeParseable<float>("rotation").GetValueOr(rotationDefault);
-    var gid = _reader.GetOptionalAttributeParseable<uint>("gid").GetValueOrOptional(gidDefault);
     var visible = _reader.GetOptionalAttributeParseable<uint>("visible").GetValueOr(visibleDefault ? 1u : 0u) == 1;
 
     // Elements
@@ -323,7 +342,7 @@ public abstract partial class TmxReaderBase
     _reader.ProcessChildren("template", (r, elementName) => elementName switch
     {
       "tileset" => () => Helpers.SetAtMostOnce(ref tileset, ReadTileset(), "Tileset"),
-      "object" => () => Helpers.SetAtMostOnce(ref obj, ReadObject(), "Object"),
+      "object" => () => Helpers.SetAtMostOnce(ref obj, ReadObject(null), "Object"),
       _ => r.Skip
     });
 

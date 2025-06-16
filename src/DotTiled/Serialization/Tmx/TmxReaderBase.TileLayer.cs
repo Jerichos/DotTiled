@@ -103,7 +103,7 @@ public abstract partial class TmxReaderBase
     };
   }
 
-  internal Group ReadGroup()
+  internal Group ReadGroup(List<Tileset> tilesets)
   {
     var id = _reader.GetRequiredAttributeParseable<uint>("id");
     var name = _reader.GetOptionalAttribute("name").GetValueOr("");
@@ -124,9 +124,9 @@ public abstract partial class TmxReaderBase
     {
       "properties" => () => Helpers.SetAtMostOnceUsingCounter(ref properties, Helpers.MergeProperties(properties, ReadProperties()).ToList(), "Properties", ref propertiesCounter),
       "layer" => () => layers.Add(ReadTileLayer(false)),
-      "objectgroup" => () => layers.Add(ReadObjectLayer()),
+      "objectgroup" => () => layers.Add(ReadObjectLayer(tilesets)),
       "imagelayer" => () => layers.Add(ReadImageLayer()),
-      "group" => () => layers.Add(ReadGroup()),
+      "group" => () => layers.Add(ReadGroup(tilesets)),
       _ => r.Skip
     });
 
