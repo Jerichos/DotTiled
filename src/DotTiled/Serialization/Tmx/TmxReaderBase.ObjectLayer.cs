@@ -84,7 +84,7 @@ public abstract partial class TmxReaderBase
       {
         foreach (var tileset in tilesets)
         {
-          if (tileset.FirstGID.HasValue && tileset.FirstGID <= gid)
+          if (tileset.FirstGID.HasValue && tileset.FirstGID <= gid && gid < tileset.FirstGID + tileset.Tiles.Count)
           {
             var localGid = gid - tileset.FirstGID;
             Tile tile = tileset.Tiles[(int)localGid];
