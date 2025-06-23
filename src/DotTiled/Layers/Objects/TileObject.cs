@@ -14,4 +14,7 @@ public class TileObject : Object
   /// The flipping flags for the tile.
   /// </summary>
   public FlippingFlags FlippingFlags { get; set; }
+
+
+  public Optional<RectangleObject> Collider { get; set; } = Optional<RectangleObject>.Empty;
 }

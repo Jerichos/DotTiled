@@ -88,9 +88,17 @@ public abstract partial class TmxReaderBase
           {
             var localGid = gid - tileset.FirstGID;
             Tile tile = tileset.Tiles[(int)localGid];
-            obj = new DotTiled.TileObject();
+            if(tile.Type == "Wardrobe")
+              Console.WriteLine("wardrobe found");
+
+            obj = new TileObject();
             obj.Type = tile.Type;
             obj.Properties = tile.Properties;
+
+            if (tile.ObjectLayer.HasValue && tile.ObjectLayer.Value.Objects[0] is RectangleObject collider)
+            {
+              ((TileObject)obj).Collider = collider;
+            }
             break;
           }
         }
@@ -139,7 +147,7 @@ public abstract partial class TmxReaderBase
       if (gid.HasValue)
       {
         var (clearedGIDs, flippingFlags) = Helpers.ReadAndClearFlippingFlagsFromGIDs([gid.Value]);
-        foundObject = new TileObject { ID = id, GID = clearedGIDs.Single(), FlippingFlags = flippingFlags.Single() };
+        foundObject = new TileObject { ID = id, GID = clearedGIDs.Single(), FlippingFlags = flippingFlags.Single(), Collider = ((TileObject)obj).Collider };
       }
       else
       {
